@@ -91,9 +91,9 @@ class ExcelDB:
 
     FEATURE_DEFAULTS: dict[str, tuple[str, str]] = {
         "ac1": ("1", "AC1 · Produtos"),
-        "ac2": ("1", "AC2 · Clientes"),
-        "ac3": ("1", "AC3 · Fornecedores"),
-        "final": ("1", "Prova final · Filiais e pedidos"),
+        "ac2": ("0", "AC2 · Clientes"),
+        "ac3": ("0", "AC3 · Fornecedores"),
+        "final": ("0", "Prova final · Filiais e pedidos"),
     }
 
     RELATIONSHIPS: dict[str, tuple[str, str]] = {
