@@ -26,7 +26,7 @@
                         {% else %}{{ row.get(key) if row.get(key) not in [None, ''] else '-' }}{% endif %}
                     </td>
                 {% endfor %}
-                <td class="actions-cell"><div class="row-actions"><a class="icon-button view" title="Visualizar" aria-label="Visualizar" href="{{ url_for(view_endpoints[entity], record_id=row.id) }}"><span class="material-symbols-outlined">visibility</span></a><a class="icon-button edit" title="Alterar" aria-label="Alterar" href="{{ url_for(edit_endpoints[entity], record_id=row.id) }}"><span class="material-symbols-outlined">edit</span></a><form method="post" action="{{ url_for(delete_endpoints[entity], record_id=row.id) }}" onsubmit="return confirmDelete('{{ entity|capitalize }}');"><button class="icon-button delete" title="Excluir" aria-label="Excluir" type="submit"><span class="material-symbols-outlined">delete</span></button></form></div></td>
+                <td class="actions-cell"><div class="row-actions"><a class="icon-button view" title="Visualizar" aria-label="Visualizar" href="{{ url_for(view_endpoints[entity], record_id=row.id) }}"><span class="material-symbols-outlined">visibility</span></a><a class="icon-button edit" title="Alterar" aria-label="Alterar" href="{{ url_for(edit_endpoints[entity], record_id=row.id) }}"><span class="material-symbols-outlined">edit</span></a><button class="icon-button delete" title="Excluir" aria-label="Excluir {{ entity }} {{ row.nome }}" type="button" data-delete-trigger data-delete-url="{{ url_for(delete_endpoints[entity], record_id=row.id) }}" data-delete-name="{{ row.nome }}"><span class="material-symbols-outlined">delete</span></button></div></td>
             </tr>
         {% endfor %}
         </tbody></table></div>
@@ -34,4 +34,15 @@
         <div class="empty-state"><span class="material-symbols-outlined">search_off</span><strong>Nenhum registro encontrado</strong><p>Cadastre o primeiro {{ entity }} ou altere o termo da pesquisa.</p><a class="button primary small" href="{{ create_url }}"><span class="material-symbols-outlined">add</span>Cadastrar {{ entity }}</a></div>
     {% endif %}
 </section>
+<dialog class="delete-dialog" id="delete-dialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-description">
+    <form method="post" id="delete-dialog-form">
+        <div class="delete-dialog-icon"><span class="material-symbols-outlined" aria-hidden="true">delete</span></div>
+        <h3 id="delete-dialog-title">Excluir {{ entity }}?</h3>
+        <p id="delete-dialog-description">Deseja excluir <strong id="delete-dialog-name"></strong>? Se houver registros relacionados, {{ entity }} será apenas inativado para preservar o histórico.</p>
+        <div class="delete-dialog-actions">
+            <button class="button secondary" type="button" data-close-delete-dialog>Cancelar</button>
+            <button class="button danger" type="submit"><span class="material-symbols-outlined">delete</span>Confirmar exclusão</button>
+        </div>
+    </form>
+</dialog>
 {% endblock %}

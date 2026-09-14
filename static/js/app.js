@@ -1,12 +1,23 @@
-function confirmDelete(entity) {
-    return window.confirm(`Deseja excluir este ${entity.toLowerCase()}? Se ele já estiver relacionado, será apenas inativado para preservar o histórico.`);
-}
-
 function formatMoney(value) {
     return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const deleteDialog = document.querySelector('#delete-dialog');
+    const deleteForm = document.querySelector('#delete-dialog-form');
+    document.querySelectorAll('[data-delete-trigger]').forEach(button => {
+        button.addEventListener('click', () => {
+            if (!deleteDialog || !deleteForm) return;
+            deleteForm.action = button.dataset.deleteUrl;
+            document.querySelector('#delete-dialog-name').textContent = button.dataset.deleteName || 'este registro';
+            deleteDialog.showModal();
+        });
+    });
+    deleteDialog?.querySelector('[data-close-delete-dialog]')?.addEventListener('click', () => deleteDialog.close());
+    deleteDialog?.addEventListener('click', event => {
+        if (event.target === deleteDialog) deleteDialog.close();
+    });
+
     document.querySelectorAll('[data-back-fallback]').forEach(link => {
         link.addEventListener('click', event => {
             if (!document.referrer) return;
