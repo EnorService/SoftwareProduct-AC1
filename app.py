@@ -6,10 +6,9 @@ from functools import wraps
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 from config import EXCEL_FILE, HOST, PORT, SECRET_KEY
-from github_project import GitHubProjectError, GitHubProjectsClient, normalize_board_status
 from storage.excel_db import DataError, ExcelDB
 
 
@@ -41,14 +40,6 @@ FEATURE_CATALOG = [
         "description": "Filiais, criação de pedidos e efetivação com baixa de estoque.",
     },
 ]
-
-BOARD_STATUSES = ("NAO_INICIADO", "EM_PROGRESSO", "CONCLUIDO")
-BOARD_STATUS_LABELS = {
-    "NAO_INICIADO": "Não iniciado",
-    "EM_PROGRESSO": "Em progresso",
-    "CONCLUIDO": "Concluído",
-}
-
 
 def parse_decimal(value: str | None, field_name: str = "Valor") -> float:
     value = (value or "").strip()
@@ -195,196 +186,6 @@ def admin_logout():
 @app.route("/")
 def dashboard():
     return render_template("dashboard.html", summary=db.dashboard())
-
-
-def normalize_local_board_status(value: str | None) -> str:
-    status = str(value or "").strip().upper()
-    if status not in BOARD_STATUSES:
-        raise DataError("Selecione um status válido para a demanda.")
-    return status
-
-
-@app.route("/board")
-def board():
-    items = db.list_board_items()
-    for item in items:
-        item["status"] = normalize_board_status(item.get("status"))
-
-    columns = [
-        {
-            "key": status,
-            "label": BOARD_STATUS_LABELS[status],
-            "items": [item for item in items if item.get("status") == status],
-        }
-        for status in BOARD_STATUSES
-    ]
-    github = GitHubProjectsClient()
-    return render_template(
-        "board.html",
-        columns=columns,
-        total_items=len(items),
-        board_statuses=BOARD_STATUSES,
-        board_status_labels=BOARD_STATUS_LABELS,
-        github_configured=github.configured,
-        github_project_url=github.project_url,
-        github_project_owner=github.owner,
-        github_project_number=github.project_number,
-        last_sync=db.get_setting("github.board.last_sync"),
-    )
-
-
-@app.post("/board/sincronizar")
-@admin_required
-def sync_board_from_github():
-    github = GitHubProjectsClient()
-    try:
-        snapshot = github.fetch_project_items()
-        synced_at = now_value()
-        remote_ids: set[str] = set()
-
-        for remote_item in snapshot["items"]:
-            github_item_id = str(remote_item.get("github_item_id") or "").strip()
-            if not github_item_id:
-                continue
-            remote_ids.add(github_item_id)
-            existing = db.find_board_item_by_github_id(github_item_id)
-            values = {
-                **remote_item,
-                "origem": "GITHUB",
-                "ativo": True,
-                "atualizado_em": synced_at,
-            }
-            if existing:
-                db.update("BoardItens", existing["id"], values)
-            else:
-                values["criado_em"] = synced_at
-                db.insert("BoardItens", values)
-
-        for item in db.list_board_items(include_inactive=True):
-            item_github_id = str(item.get("github_item_id") or "").strip()
-            if str(item.get("origem") or "").upper() == "GITHUB" and item_github_id not in remote_ids:
-                if db._is_active(item):
-                    db.update("BoardItens", item["id"], {"ativo": False, "atualizado_em": synced_at})
-
-        db.set_setting(
-            "github.board.last_sync",
-            synced_at,
-            "Data da última sincronização do board com o GitHub.",
-        )
-        flash(
-            f"{len(snapshot['items'])} item(ns) do GitHub sincronizado(s) com o board.",
-            "success",
-        )
-    except GitHubProjectError as exc:
-        flash(str(exc), "error")
-    return redirect(url_for("board"))
-
-
-@app.post("/board/items")
-@admin_required
-def create_board_item():
-    try:
-        title = request.form.get("titulo", "").strip()
-        validate_required(title, "Título")
-        timestamp = now_value()
-        db.insert(
-            "BoardItens",
-            {
-                "titulo": title,
-                "descricao": request.form.get("descricao", "").strip(),
-                "status": normalize_local_board_status(request.form.get("status")),
-                "origem": "LOCAL",
-                "ativo": True,
-                "criado_em": timestamp,
-                "atualizado_em": timestamp,
-            },
-        )
-        flash("Demanda adicionada ao board.", "success")
-    except DataError as exc:
-        flash(str(exc), "error")
-    return redirect(url_for("board"))
-
-
-@app.post("/board/items/<int:item_id>")
-@admin_required
-def edit_board_item(item_id: int):
-    item = db.get("BoardItens", item_id)
-    if not item or not db._is_active(item):
-        flash("Demanda não encontrada.", "error")
-        return redirect(url_for("board"))
-    if str(item.get("origem") or "").upper() == "GITHUB":
-        flash("Altere este item diretamente no GitHub e sincronize o board.", "error")
-        return redirect(url_for("board"))
-
-    try:
-        title = request.form.get("titulo", "").strip()
-        validate_required(title, "Título")
-        db.update(
-            "BoardItens",
-            item_id,
-            {
-                "titulo": title,
-                "descricao": request.form.get("descricao", "").strip(),
-                "status": normalize_local_board_status(request.form.get("status")),
-                "atualizado_em": now_value(),
-            },
-        )
-        flash("Demanda atualizada.", "success")
-    except DataError as exc:
-        flash(str(exc), "error")
-    return redirect(url_for("board"))
-
-
-@app.post("/board/items/<int:item_id>/status")
-@admin_required
-def update_board_item_status(item_id: int):
-    item = db.get("BoardItens", item_id)
-    if not item or not db._is_active(item):
-        message = "Demanda não encontrada."
-        if request.is_json:
-            return jsonify({"ok": False, "error": message}), 404
-        flash(message, "error")
-        return redirect(url_for("board"))
-
-    payload = request.get_json(silent=True) if request.is_json else request.form
-    try:
-        status = normalize_local_board_status(payload.get("status") if payload else None)
-        github_status = None
-        if str(item.get("origem") or "").upper() == "GITHUB":
-            github_status = GitHubProjectsClient().update_item_status(item, status)
-
-        values: dict[str, Any] = {"status": status, "atualizado_em": now_value()}
-        if github_status:
-            values.update(
-                {
-                    "github_status": github_status["name"],
-                    "github_status_option_id": github_status["id"],
-                }
-            )
-        db.update("BoardItens", item_id, values)
-        if request.is_json:
-            return jsonify({"ok": True, "status": status})
-        flash("Status atualizado.", "success")
-    except (DataError, GitHubProjectError) as exc:
-        if request.is_json:
-            return jsonify({"ok": False, "error": str(exc)}), 400
-        flash(str(exc), "error")
-
-    return redirect(url_for("board"))
-
-
-@app.post("/board/items/<int:item_id>/excluir")
-@admin_required
-def delete_board_item(item_id: int):
-    item = db.get("BoardItens", item_id)
-    if not item or not db._is_active(item):
-        flash("Demanda não encontrada.", "error")
-    elif str(item.get("origem") or "").upper() == "GITHUB":
-        flash("Itens do GitHub devem ser removidos do próprio Project.", "error")
-    else:
-        db.delete_or_deactivate("BoardItens", item_id)
-        flash("Demanda removida do board.", "success")
-    return redirect(url_for("board"))
 
 
 @app.route("/produtos")

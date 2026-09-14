@@ -7,6 +7,17 @@ function formatMoney(value) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-back-fallback]').forEach(link => {
+        link.addEventListener('click', event => {
+            if (!document.referrer) return;
+            try {
+                const previous = new URL(document.referrer);
+                if (previous.origin !== window.location.origin || previous.pathname === window.location.pathname) return;
+                event.preventDefault();
+                window.history.back();
+            } catch (_) { /* O link para o Dashboard continua disponível. */ }
+        });
+    });
     document.querySelectorAll('.feature-card input[type="checkbox"]').forEach(input => {
         const card = input.closest('.feature-card');
         const status = card?.querySelector('.feature-card-status');

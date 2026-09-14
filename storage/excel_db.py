@@ -87,25 +87,6 @@ class ExcelDB:
             "valor",
             "descricao",
         ],
-        "BoardItens": [
-            "id",
-            "titulo",
-            "descricao",
-            "status",
-            "origem",
-            "github_item_id",
-            "github_project_id",
-            "github_item_type",
-            "github_issue_number",
-            "github_repository",
-            "github_url",
-            "github_status",
-            "github_status_field_id",
-            "github_status_option_id",
-            "ativo",
-            "criado_em",
-            "atualizado_em",
-        ],
     }
 
     FEATURE_DEFAULTS: dict[str, tuple[str, str]] = {
@@ -323,25 +304,6 @@ class ExcelDB:
                 record
                 for record in self.list_records(sheet_name)
                 if self._as_id(record.get("id")) == record_id
-            ),
-            None,
-        )
-
-    def list_board_items(self, include_inactive: bool = False) -> list[dict[str, Any]]:
-        rows = self.list_records("BoardItens")
-        if not include_inactive:
-            rows = [row for row in rows if self._is_active(row)]
-        return sorted(rows, key=lambda row: self._as_id(row.get("id")) or 0)
-
-    def find_board_item_by_github_id(self, github_item_id: str) -> dict[str, Any] | None:
-        target = str(github_item_id or "").strip()
-        if not target:
-            return None
-        return next(
-            (
-                row
-                for row in self.list_records("BoardItens", active_only=False)
-                if str(row.get("github_item_id") or "").strip() == target
             ),
             None,
         )

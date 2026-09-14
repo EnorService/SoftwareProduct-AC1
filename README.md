@@ -91,6 +91,32 @@ O arquivo `data/lanchonete.xlsx` possui as abas:
 
 ## GitHub e avaliações
 
+### Adicionar as ACs ao GitHub Project
+
+As quatro demandas estão descritas em `docs/issues/`. Ao enviar este projeto
+para a branch `main` no GitHub, o workflow `.github/workflows/criar-issues-acs.yml`
+cria automaticamente uma Issue para **AC1 — Produtos**, **AC2 — Clientes**,
+**AC3 — Fornecedores** e **Prova final — Filiais e pedidos**. Ele confere
+inclusive as Issues fechadas para não criar outra com o mesmo título ao rodar
+novamente. A aplicação Flask não possui board nem conexão com o GitHub.
+
+Para usar o board que você criou no GitHub:
+
+1. Confirme que **Issues** e **Actions** estão habilitados no repositório.
+2. Suba os arquivos, inclusive a pasta `.github`, para a branch `main`.
+3. Em **Actions > Criar Issues das ACs**, confirme que a execução terminou.
+   Se ela não iniciou no primeiro envio, use **Run workflow** nessa tela.
+4. Abra seu GitHub Project, clique em **Add item**, selecione
+   `EnorService/SoftwareProduct-AC1` e adicione as quatro Issues à coluna
+   desejada. Depois, arraste os cartões entre **Todo**, **In Progress** e **Done**.
+
+Se aparecer “No items to add”, confira se as Issues existem na aba **Issues**
+do repositório e se você está selecionando o repositório correto. O Project
+guarda o status; o repositório guarda o título e a descrição de cada Issue.
+
+Se o repositório usar uma branch principal diferente de `main`, ajuste o nome
+da branch no workflow ou execute-o manualmente em **Actions**.
+
 Recomenda-se usar uma branch ou tag para cada entrega:
 
 ```text
@@ -101,39 +127,3 @@ prova-final
 ```
 
 Os registros de backlog, Sprints, casos de uso e classes estão em `docs/`.
-
-## Board de acompanhamento integrado ao GitHub
-
-O projeto possui um board local acessível em `/board`. Ele continua usando o
-Excel como persistência e também pode importar os itens de um GitHub Project v2,
-mantendo o título, a descrição, o status e o link da Issue ou Pull Request.
-
-### Como configurar depois de subir o projeto
-
-1. Crie ou abra o repositório no GitHub e envie os arquivos manualmente.
-2. Crie uma Issue para cada AC e adicione as Issues ao seu Project em modo Board.
-3. Copie `.env.example` para `.env` na máquina em que a aplicação será executada.
-4. Preencha no `.env`:
-
-```env
-LANCHONETE_GITHUB_TOKEN=seu_token_com_acesso_ao_project
-LANCHONETE_GITHUB_OWNER=seu_usuario_ou_organizacao
-LANCHONETE_GITHUB_OWNER_TYPE=user
-LANCHONETE_GITHUB_PROJECT_NUMBER=1
-```
-
-Para um Project de organização, altere `LANCHONETE_GITHUB_OWNER_TYPE` para
-`organization`. O número do projeto é o número exibido na URL do Project, como
-`/users/seu-usuario/projects/1` ou `/orgs/sua-organizacao/projects/1`.
-
-5. Instale as dependências e execute a aplicação normalmente.
-6. Acesse **Board das ACs**, entre como administrador e clique em
-   **Sincronizar GitHub**.
-
-Os itens importados aparecem com o selo GitHub e com o botão **Abrir no GitHub**.
-Demandas criadas diretamente no sistema ficam como itens locais. Arrastar um
-item local altera apenas o board local; arrastar um item importado também tenta
-atualizar o status do Project, desde que o token tenha permissão de escrita.
-
-O arquivo `.env` está ignorado pelo Git para evitar o envio do token ao
-repositório. Nunca coloque esse token em HTML ou JavaScript do navegador.

@@ -1,6 +1,3 @@
-from datetime import datetime
-from pathlib import Path
-
 from config import EXCEL_FILE
 from storage.excel_db import ExcelDB
 
@@ -87,45 +84,6 @@ def seed() -> None:
                 "ativo": True,
             },
         )
-
-    if not db.list_board_items(include_inactive=True):
-        board_items = [
-            (
-                "AC1 — Produtos",
-                "Cadastro, alteração, exclusão e visualização dos produtos.",
-                "CONCLUIDO",
-            ),
-            (
-                "AC2 — Clientes",
-                "Cadastro, alteração, exclusão e visualização dos clientes.",
-                "CONCLUIDO",
-            ),
-            (
-                "AC3 — Fornecedores",
-                "Cadastro, alteração, exclusão e visualização dos fornecedores.",
-                "CONCLUIDO",
-            ),
-            (
-                "Prova final — Filiais e pedidos",
-                "Concluir o fluxo de filiais, pedidos, estoque e apresentação.",
-                "EM_PROGRESSO",
-            ),
-        ]
-        timestamp = datetime.now().isoformat(timespec="minutes")
-        for title, description, status in board_items:
-            db.insert(
-                "BoardItens",
-                {
-                    "titulo": title,
-                    "descricao": description,
-                    "status": status,
-                    "origem": "LOCAL",
-                    "ativo": True,
-                    "criado_em": timestamp,
-                    "atualizado_em": timestamp,
-                },
-            )
-
 
 if __name__ == "__main__":
     seed()

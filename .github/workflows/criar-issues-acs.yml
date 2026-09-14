@@ -1,0 +1,38 @@
+name: Criar Issues das ACs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/criar-issues-acs.yml'
+      - 'docs/issues/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  criar-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar arquivos do projeto
+        uses: actions/checkout@v4
+      - name: Criar as Issues que ainda não existem
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          existentes="$(gh issue list --state all --limit 1000 --json title --jq '.[].title')"
+          for arquivo in docs/issues/*.md; do
+            titulo="$(head -n 1 "$arquivo")"
+            titulo="${titulo#\# }"
+            if printf '%s\n' "$existentes" | grep -Fxq -- "$titulo"; then
+              printf 'Já existe: %s\n' "$titulo"
+              continue
+            fi
+            gh issue create --title "$titulo" --body-file "$arquivo"
+            existentes="${existentes}"$'\n'"${titulo}"
+          done

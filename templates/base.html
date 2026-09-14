@@ -11,6 +11,13 @@
 <body>
     <div class="app-shell">
         <main class="main-content">
+            {% if request.endpoint != 'dashboard' %}
+                <nav class="page-top-nav" aria-label="Navegação da página">
+                    <a class="button secondary page-back-button" href="{{ url_for('dashboard') }}" data-back-fallback="{{ url_for('dashboard') }}">
+                        <span class="material-symbols-outlined">arrow_back</span>Voltar
+                    </a>
+                </nav>
+            {% endif %}
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}<button type="button" class="flash-close" aria-label="Fechar aviso" onclick="this.parentElement.remove()"><span class="material-symbols-outlined">close</span></button></div>{% endfor %}</div>{% endif %}
             {% endwith %}
@@ -19,7 +26,6 @@
                 <span>Lanchonete Ágil · Projeto acadêmico</span>
                 <span class="footer-links">
                     <a href="{{ url_for('dashboard') }}"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
-                    <a href="{{ url_for('board') }}"><span class="material-symbols-outlined">view_kanban</span>Board das ACs</a>
                     {% if features.ac1 %}<a href="{{ url_for('products') }}"><span class="material-symbols-outlined">inventory_2</span>Produtos</a>{% endif %}
                     {% if features.ac2 %}<a href="{{ url_for('clients') }}"><span class="material-symbols-outlined">group</span>Clientes</a>{% endif %}
                     {% if features.ac3 %}<a href="{{ url_for('suppliers') }}"><span class="material-symbols-outlined">local_shipping</span>Fornecedores</a>{% endif %}
