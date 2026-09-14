@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Agile e diagramas · Lanchonete Ágil{% endblock %}
+{% block page_title %}Agile e diagramas{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">Documentação acadêmica</span><h2>Como o projeto aplica o Manifesto Ágil</h2><p>Os documentos também estão disponíveis na pasta <code>docs</code> do projeto.</p></div></div>
+<div class="documentation-grid">
+    <section class="panel"><span class="doc-number">01</span><h3>Entregas incrementais</h3><p>O sistema evolui por ACs: primeiro produtos, depois clientes, fornecedores e, por fim, filiais e pedidos.</p><span class="doc-tag">AC1 → AC2 → AC3 → Final</span></section>
+    <section class="panel"><span class="doc-number">02</span><h3>Backlog priorizado</h3><p>As histórias de usuário e funcionalidades são organizadas por prioridade, mantendo o foco no que gera valor primeiro.</p><span class="doc-tag">docs/agile.md</span></section>
+    <section class="panel"><span class="doc-number">03</span><h3>Feedback e mudança</h3><p>Após cada entrega, a equipe pode revisar as necessidades, alterar o backlog e melhorar a próxima Sprint.</p><span class="doc-tag">Review + Retrospectiva</span></section>
+    <section class="panel"><span class="doc-number">04</span><h3>Diagramas da prova final</h3><p>Os diagramas de casos de uso e classes estão documentados em arquivos Mermaid e PlantUML.</p><span class="doc-tag">docs/*.puml</span></section>
+</div>
+<section class="panel agile-panel"><div class="panel-header"><div><span class="eyebrow">Definição de pronto</span><h3>Checklist de cada entrega</h3></div></div><div class="checklist"><label><input type="checkbox"> Funcionalidade implementada</label><label><input type="checkbox"> Validação testada</label><label><input type="checkbox"> Tela revisada</label><label><input type="checkbox"> Código versionado no GitHub</label><label><input type="checkbox"> Feedback registrado</label></div></section>
+{% endblock %}

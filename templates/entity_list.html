@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Lanchonete Ágil{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div><span class="eyebrow">Cadastro</span><h2>{{ title }}</h2><p>{{ subtitle }}</p></div>
+    <a class="button primary" href="{{ create_url }}"><span class="material-symbols-outlined">add</span>Novo {{ entity }}</a>
+</div>
+
+<section class="panel">
+    <div class="toolbar">
+        <form class="search-form" method="get" action="{{ list_url }}"><span class="material-symbols-outlined">search</span><input type="search" name="q" value="{{ search }}" placeholder="Pesquisar..."><button class="button secondary small" type="submit"><span class="material-symbols-outlined">search</span>Pesquisar</button></form>
+        <span class="result-count">{{ rows|length }} registro(s)</span>
+    </div>
+    {% if rows %}
+        <div class="table-wrap"><table><thead><tr>{% for key, label in columns %}<th>{{ label }}</th>{% endfor %}<th class="actions-cell">Ações</th></tr></thead><tbody>
+        {% set view_endpoints = {'produto': 'view_product', 'cliente': 'view_client', 'fornecedor': 'view_supplier', 'filial': 'view_branch'} %}
+        {% set edit_endpoints = {'produto': 'edit_product', 'cliente': 'edit_client', 'fornecedor': 'edit_supplier', 'filial': 'edit_branch'} %}
+        {% set delete_endpoints = {'produto': 'delete_product', 'cliente': 'delete_client', 'fornecedor': 'delete_supplier', 'filial': 'delete_branch'} %}
+        {% for row in rows %}
+            <tr>
+                {% for key, label in columns %}
+                    <td>
+                        {% if key == 'preco' %}{{ row.get(key)|money }}
+                        {% elif key == 'ativo' %}<span class="pill {{ 'active' if row.get(key) in [true, 'True', 'true', 'ATIVO', 'on', 1] else 'inactive' }}">{{ 'ATIVO' if row.get(key) in [true, 'True', 'true', 'ATIVO', 'on', 1] else 'INATIVO' }}</span>
+                        {% else %}{{ row.get(key) if row.get(key) not in [None, ''] else '-' }}{% endif %}
+                    </td>
+                {% endfor %}
+                <td class="actions-cell"><div class="row-actions"><a class="icon-button view" title="Visualizar" aria-label="Visualizar" href="{{ url_for(view_endpoints[entity], record_id=row.id) }}"><span class="material-symbols-outlined">visibility</span></a><a class="icon-button edit" title="Alterar" aria-label="Alterar" href="{{ url_for(edit_endpoints[entity], record_id=row.id) }}"><span class="material-symbols-outlined">edit</span></a><form method="post" action="{{ url_for(delete_endpoints[entity], record_id=row.id) }}" onsubmit="return confirmDelete('{{ entity|capitalize }}');"><button class="icon-button delete" title="Excluir" aria-label="Excluir" type="submit"><span class="material-symbols-outlined">delete</span></button></form></div></td>
+            </tr>
+        {% endfor %}
+        </tbody></table></div>
+    {% else %}
+        <div class="empty-state"><span class="material-symbols-outlined">search_off</span><strong>Nenhum registro encontrado</strong><p>Cadastre o primeiro {{ entity }} ou altere o termo da pesquisa.</p><a class="button primary small" href="{{ create_url }}"><span class="material-symbols-outlined">add</span>Cadastrar {{ entity }}</a></div>
+    {% endif %}
+</section>
+{% endblock %}

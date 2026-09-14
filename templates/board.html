@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Board de acompanhamento · Lanchonete Ágil{% endblock %}
+{% block content %}
+<section class="board-page" data-board-page>
+    <div class="page-heading board-heading">
+        <div>
+            <span class="eyebrow">Acompanhamento do projeto</span>
+            <h2>Board das ACs</h2>
+            <p>Organize as demandas e consulte as Issues do seu GitHub Project no mesmo lugar.</p>
+        </div>
+        <div class="board-heading-actions">
+            {% if is_admin %}
+                <form method="post" action="{{ url_for('sync_board_from_github') }}">
+                    <button class="button secondary" type="submit">
+                        <span class="material-symbols-outlined">sync</span>Sincronizar GitHub
+                    </button>
+                </form>
+                <button class="button primary" type="button" data-open-board-modal>
+                    <span class="material-symbols-outlined">add</span>Nova demanda
+                </button>
+            {% else %}
+                <a class="button primary" href="{{ url_for('admin_login', next=request.path) }}">
+                    <span class="material-symbols-outlined">lock_open</span>Entrar para editar
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <section class="board-connection-panel {% if github_configured %}is-connected{% else %}is-pending{% endif %}">
+        <span class="board-connection-icon material-symbols-outlined">{% if github_configured %}cloud_done{% else %}cloud_off{% endif %}</span>
+        <div class="board-connection-copy">
+            {% if github_configured %}
+                <strong>GitHub Project configurado</strong>
+                <p>
+                    {% if github_project_url %}<a href="{{ github_project_url }}" target="_blank" rel="noopener">Abrir Project no GitHub</a>{% endif %}
+                    {% if last_sync %}<span>Última sincronização: {{ last_sync|date_br }}</span>{% else %}<span>Clique em “Sincronizar GitHub” para trazer os itens.</span>{% endif %}
+                </p>
+            {% else %}
+                <strong>Integração com GitHub ainda não configurada</strong>
+                <p>Copie o arquivo <code>.env.example</code> para <code>.env</code>, preencha o token, o proprietário e o número do Project e reinicie a aplicação.</p>
+            {% endif %}
+        </div>
+        <span class="board-connection-count"><strong>{{ total_items }}</strong> item(ns)</span>
+    </section>
+
+    <div class="board-grid" data-board>
+        {% for column in columns %}
+            <section class="board-column board-column-{{ column.key|lower }}" data-board-column data-status="{{ column.key }}">
+                <header class="board-column-header">
+                    <div class="board-column-title"><span class="board-column-dot"></span><h3>{{ column.label }}</h3></div>
+                    <span class="board-column-count">{{ column['items']|length }}</span>
+                </header>
+                <div class="board-column-body">
+                    {% for item in column['items'] %}
+                        {% set is_github_item = item.origem|upper == 'GITHUB' %}
+                        <article class="board-card {% if is_github_item %}is-github-item{% else %}is-local-item{% endif %}"
+                                 draggable="{{ 'true' if is_admin else 'false' }}"
+                                 data-board-card
+                                 data-item-id="{{ item.id }}"
+                                 data-status="{{ item.status }}"
+                                 data-editable="{{ 'true' if is_admin and not is_github_item else 'false' }}"
+                                 data-title="{{ item.titulo|e }}"
+                                 data-description="{{ (item.descricao or '')|e }}">
+                            <div class="board-card-topline">
+                                <span class="board-origin {% if is_github_item %}github{% else %}local{% endif %}">
+                                    <span class="material-symbols-outlined">{% if is_github_item %}hub{% else %}edit_note{% endif %}</span>
+                                    {% if is_github_item %}GitHub{% else %}Local{% endif %}
+                                </span>
+                                {% if item.github_issue_number %}<span class="board-issue-number">#{{ item.github_issue_number }}</span>{% endif %}
+                            </div>
+                            <h3>{{ item.titulo }}</h3>
+                            {% if item.descricao %}<p>{{ item.descricao }}</p>{% endif %}
+                            <div class="board-card-footer">
+                                {% if is_github_item and item.github_url %}
+                                    <a class="board-card-link" href="{{ item.github_url }}" target="_blank" rel="noopener">Abrir no GitHub <span class="material-symbols-outlined">open_in_new</span></a>
+                                {% elif is_admin %}
+                                    <span class="board-card-hint">Duplo clique para editar</span>
+                                {% endif %}
+                                {% if is_admin and not is_github_item %}
+                                    <button class="icon-button delete board-delete-button" type="button" title="Excluir demanda" aria-label="Excluir demanda" data-open-delete data-item-id="{{ item.id }}" data-item-title="{{ item.titulo|e }}">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% else %}
+                        <div class="board-column-empty"><span class="material-symbols-outlined">inbox</span><span>Nenhuma demanda nesta etapa.</span></div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+    </div>
+
+    <section class="panel board-help-panel">
+        <div class="panel-header">
+            <div><span class="eyebrow">Como usar</span><h3>Board local e GitHub Project</h3></div>
+            {% if github_project_url %}<a class="text-link" href="{{ github_project_url }}" target="_blank" rel="noopener">Ver Project <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
+        </div>
+        <div class="board-help-grid">
+            <div><span class="material-symbols-outlined">add_task</span><p><strong>Demandas locais</strong> são criadas neste board e ficam salvas no Excel do projeto.</p></div>
+            <div><span class="material-symbols-outlined">hub</span><p><strong>Itens do GitHub</strong> aparecem após a sincronização e mantêm o link para a Issue ou Pull Request.</p></div>
+            <div><span class="material-symbols-outlined">drag_pan</span><p><strong>Arraste os cartões</strong> para trocar o status. Itens do GitHub também tentam atualizar o status no Project.</p></div>
+        </div>
+    </section>
+</section>
+
+{% if is_admin %}
+    <dialog class="board-dialog" id="board-item-dialog" aria-labelledby="board-dialog-title">
+        <form method="post" action="{{ url_for('create_board_item') }}" id="board-item-form">
+            <div class="board-dialog-header"><div><span class="eyebrow">Board</span><h3 id="board-dialog-title">Nova demanda</h3></div><button class="dialog-close" type="button" data-close-dialog aria-label="Fechar"><span class="material-symbols-outlined">close</span></button></div>
+            <div class="board-dialog-fields">
+                <label class="field"><span>Título</span><input id="board-item-title" name="titulo" type="text" maxlength="180" required placeholder="Ex.: Implementar cadastro de produtos"></label>
+                <label class="field"><span>Descrição</span><textarea id="board-item-description" name="descricao" maxlength="1000" placeholder="Descreva o que precisa ser feito."></textarea></label>
+                <label class="field"><span>Status</span><select id="board-item-status" name="status"><option value="NAO_INICIADO">Não iniciado</option><option value="EM_PROGRESSO">Em progresso</option><option value="CONCLUIDO">Concluído</option></select></label>
+            </div>
+            <div class="board-dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancelar</button><button class="button primary" type="submit"><span class="material-symbols-outlined">save</span>Salvar demanda</button></div>
+        </form>
+    </dialog>
+
+    <dialog class="board-dialog board-delete-dialog" id="board-delete-dialog" aria-labelledby="board-delete-title">
+        <form method="post" id="board-delete-form">
+            <div class="board-dialog-header"><div><span class="eyebrow">Confirmação</span><h3 id="board-delete-title">Excluir demanda?</h3></div><button class="dialog-close" type="button" data-close-dialog aria-label="Fechar"><span class="material-symbols-outlined">close</span></button></div>
+            <p class="board-delete-copy">A demanda <strong id="board-delete-item-title"></strong> será removida do board local.</p>
+            <div class="board-dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancelar</button><button class="button danger" type="submit"><span class="material-symbols-outlined">delete</span>Excluir</button></div>
+        </form>
+    </dialog>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/board.js') }}"></script>
+{% endblock %}

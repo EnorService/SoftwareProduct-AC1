@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Acesso administrativo · Lanchonete Ágil{% endblock %}
+{% block page_title %}Acesso administrativo{% endblock %}
+{% block content %}
+<div class="admin-login-wrap">
+    <section class="panel admin-login-card">
+        <div class="admin-lock"><span class="material-symbols-outlined">admin_panel_settings</span></div>
+        <span class="eyebrow">Área protegida</span>
+        <h2>Configurar funcionalidades</h2>
+        <p>Informe a senha administrativa para escolher quais ACs ficarão visíveis no sistema.</p>
+        <form method="post" action="{{ url_for('admin_login', next=request.args.get('next', '')) }}" class="admin-login-form">
+            <label class="field"><span>Senha administrativa</span><input type="password" name="senha" autofocus required placeholder="Digite a senha"></label>
+            <button class="button primary full-button" type="submit">Entrar como administrador</button>
+        </form>
+    </section>
+</div>
+{% endblock %}

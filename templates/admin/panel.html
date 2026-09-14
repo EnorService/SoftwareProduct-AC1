@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Administração · Lanchonete Ágil{% endblock %}
+{% block page_title %}Administração{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">Área administrativa</span><h2>Visibilidade das funcionalidades</h2><p>Marque as ACs que devem aparecer para os usuários do sistema.</p></div></div>
+<section class="panel admin-panel">
+    <div class="admin-panel-intro"><div class="admin-panel-icon"><span class="material-symbols-outlined">settings</span></div><div><strong>Controle de acesso visual</strong><p>Quando uma opção estiver desmarcada, ela será ocultada do dashboard e também ficará bloqueada quando alguém tentar abrir sua URL diretamente.</p></div></div>
+    <form method="post" action="{{ url_for('update_features') }}">
+        <div class="feature-grid">
+            {% for item in features %}
+                <label class="feature-card {% if item.enabled %}enabled{% endif %}">
+                    <input type="checkbox" name="feature_{{ item.key }}" {% if item.enabled %}checked{% endif %}>
+                    <span class="feature-card-check"><span class="material-symbols-outlined">check</span></span>
+                    <span class="feature-card-content"><strong>{{ item.title }}</strong><small>{{ item.description }}</small></span>
+                    <span class="feature-card-status">{{ 'Visível' if item.enabled else 'Oculta' }}</span>
+                </label>
+            {% endfor %}
+        </div>
+        <div class="admin-actions"><a class="button secondary" href="{{ url_for('dashboard') }}"><span class="material-symbols-outlined">close</span>Cancelar</a><button class="button primary" type="submit"><span class="material-symbols-outlined">save</span>Salvar permissões</button></div>
+    </form>
+</section>
+<section class="admin-note"><strong>Senha atual do projeto acadêmico:</strong> `123` <span>Você pode alterá-la depois pela variável `LANCHONETE_ADMIN_PASSWORD`.</span></section>
+{% endblock %}

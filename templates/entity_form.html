@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Lanchonete Ágil{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">Formulário</span><h2>{{ title }}</h2><p>{{ subtitle }}</p></div></div>
+<section class="panel form-panel">
+    <form method="post" action="{{ action_url }}" class="form-grid">
+        {% for field in fields %}
+            {% set current = values.get(field.name) %}
+            {% if field.type == 'checkbox' %}
+                <label class="checkbox-field full"><input type="checkbox" name="{{ field.name }}" {% if (current is none and field.default) or current in [true, 'True', 'true', 'on', '1', 1] %}checked{% endif %}><span>{{ field.label }}</span></label>
+            {% elif field.type == 'textarea' %}
+                <label class="field full"><span>{{ field.label }}{% if field.required %} *{% endif %}</span><textarea name="{{ field.name }}" {% if field.required %}required{% endif %}>{{ current or '' }}</textarea></label>
+            {% elif field.type == 'select' %}
+                <label class="field"><span>{{ field.label }}{% if field.required %} *{% endif %}</span><select name="{{ field.name }}" {% if field.required %}required{% endif %}><option value="">Selecione...</option>{% for option in field.options %}<option value="{{ option[0] }}" {% if current|string == option[0]|string %}selected{% endif %}>{{ option[1] }}</option>{% endfor %}</select></label>
+            {% else %}
+                <label class="field"><span>{{ field.label }}{% if field.required %} *{% endif %}</span><input type="{{ 'text' if field.type == 'money' else field.type }}" name="{{ field.name }}" value="{{ current or '' }}" {% if field.required %}required{% endif %}{% if field.min is defined and field.type != 'money' %} min="{{ field.min }}"{% endif %}{% if field.maxlength is defined %} maxlength="{{ field.maxlength }}"{% endif %}{% if field.type == 'money' %} inputmode="decimal" placeholder="0,00"{% endif %}></label>
+            {% endif %}
+        {% endfor %}
+        <div class="form-actions full"><a class="button secondary" href="{{ back_url }}"><span class="material-symbols-outlined">close</span>Cancelar</a><button class="button primary" type="submit"><span class="material-symbols-outlined">save</span>Salvar informações</button></div>
+    </form>
+</section>
+{% endblock %}

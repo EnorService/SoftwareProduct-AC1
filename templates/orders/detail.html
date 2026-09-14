@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% set order = details.order %}
+{% block title %}{{ order.numero }} · Lanchonete Ágil{% endblock %}
+{% block page_title %}{{ order.numero }}{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">Detalhes do pedido</span><h2>{{ order.numero }}</h2><p>Criado em {{ order.data_pedido|date_br }}</p></div></div>
+<div class="order-detail-grid">
+    <section class="panel"><div class="panel-header"><div><span class="eyebrow">Resumo</span><h3>Informações gerais</h3></div><span class="pill {{ order.status|lower }}">{{ order.status }}</span></div><div class="detail-grid compact-details"><div class="detail-item"><small>Cliente</small><strong>{{ details.client.nome if details.client else 'Não encontrado' }}</strong></div><div class="detail-item"><small>Filial</small><strong>{{ details.branch.nome if details.branch else 'Não encontrada' }}</strong></div><div class="detail-item"><small>Data de efetivação</small><strong>{{ order.efetivado_em|date_br }}</strong></div><div class="detail-item"><small>Observação</small><strong>{{ order.observacao or '-' }}</strong></div></div></section>
+    <section class="panel"><div class="panel-header"><div><span class="eyebrow">Itens</span><h3>Produtos selecionados</h3></div></div><div class="table-wrap"><table><thead><tr><th>Produto</th><th>Quantidade</th><th>Unitário</th><th>Subtotal</th></tr></thead><tbody>{% for item in details.items %}<tr><td><strong>{{ item.produto_nome }}</strong></td><td>{{ item.quantidade }}</td><td>{{ item.preco_unitario|money }}</td><td>{{ item.subtotal|money }}</td></tr>{% endfor %}</tbody><tfoot><tr><th colspan="3">Total</th><th>{{ order.total|money }}</th></tr></tfoot></table></div></section>
+</div>
+{% if order.status == 'ABERTO' %}<section class="panel warning-panel"><div><strong>Pedido ainda não efetivado</strong><p>Ao efetivar, o sistema verificará e reduzirá o estoque dos produtos.</p></div><div class="warning-actions"><form method="post" action="{{ url_for('finalize_order', order_id=order.id) }}" onsubmit="return confirm('Deseja efetivar este pedido? O estoque será atualizado.');"><button class="button primary" type="submit"><span class="material-symbols-outlined">check_circle</span>Efetivar pedido</button></form><form method="post" action="{{ url_for('cancel_order', order_id=order.id) }}" onsubmit="return confirm('Deseja cancelar este pedido?');"><button class="button danger" type="submit"><span class="material-symbols-outlined">cancel</span>Cancelar pedido</button></form></div></section>{% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Novo pedido · Lanchonete Ágil{% endblock %}
+{% block page_title %}Novo pedido{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">Prova final</span><h2>Registrar pedido</h2><p>Relacione cliente, filial e produtos para criar um pedido em aberto.</p></div></div>
+<form method="post" action="{{ url_for('new_order') }}" class="order-layout" id="order-form">
+    <section class="panel order-main">
+        <div class="panel-header"><div><span class="eyebrow">Dados principais</span><h3>Quem está realizando o pedido?</h3></div></div>
+        <div class="form-grid two-columns"><label class="field"><span>Cliente *</span><select name="id_cliente" required><option value="">Selecione...</option>{% for client in clients %}<option value="{{ client.id }}" {% if values.get('id_cliente')|string == client.id|string %}selected{% endif %}>{{ client.nome }}</option>{% endfor %}</select></label><label class="field"><span>Filial *</span><select name="id_filial" required><option value="">Selecione...</option>{% for branch in branches %}<option value="{{ branch.id }}" {% if values.get('id_filial')|string == branch.id|string %}selected{% endif %}>{{ branch.nome }} · {{ branch.cidade }}</option>{% endfor %}</select></label></div>
+        <div class="panel-header order-items-heading"><div><span class="eyebrow">Itens</span><h3>Produtos do pedido</h3></div><button class="button secondary small" type="button" id="add-item"><span class="material-symbols-outlined">add</span>Adicionar produto</button></div>
+        <div id="order-items" class="order-items"></div>
+        <template id="product-options">{% for product in products %}<option value="{{ product.id }}" data-price="{{ product.preco }}" data-stock="{{ product.estoque }}">{{ product.nome }} · {{ product.preco|money }} (estoque: {{ product.estoque }})</option>{% endfor %}</template>
+        <label class="field full"><span>Observação</span><textarea name="observacao" placeholder="Observações opcionais...">{{ values.get('observacao', '') }}</textarea></label>
+    </section>
+    <section class="panel order-summary-panel"><span class="eyebrow">Resumo</span><h3>Efetivação do pedido</h3><p>O pedido será criado como <strong>ABERTO</strong>. Depois, você poderá efetivá-lo para validar o estoque e confirmar a venda.</p><div class="summary-line"><span>Total estimado</span><strong id="order-total">R$ 0,00</strong></div><button class="button primary full-button" type="submit"><span class="material-symbols-outlined">receipt_long</span>Criar pedido</button><a class="button secondary full-button" href="{{ url_for('orders') }}"><span class="material-symbols-outlined">close</span>Cancelar</a></section>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+window.orderProducts = {};
+document.querySelector('#product-options').content.querySelectorAll('option').forEach(option => {
+    if (option.value) window.orderProducts[option.value] = { price: Number(option.dataset.price || 0), stock: Number(option.dataset.stock || 0) };
+});
+</script>
+{% endblock %}

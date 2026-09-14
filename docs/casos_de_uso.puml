@@ -1,0 +1,28 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Administrador as admin
+actor Atendente as attendant
+actor Gestor as manager
+
+rectangle "Sistema Lanchonete Ágil" {
+  usecase "Gerenciar produtos" as UC1
+  usecase "Gerenciar clientes" as UC2
+  usecase "Gerenciar fornecedores" as UC3
+  usecase "Gerenciar filiais" as UC4
+  usecase "Criar pedido" as UC5
+  usecase "Efetivar pedido" as UC6
+  usecase "Consultar dashboard" as UC7
+}
+
+admin --> UC1
+admin --> UC2
+admin --> UC3
+admin --> UC4
+attendant --> UC5
+attendant --> UC6
+manager --> UC7
+UC6 .> UC5 : <<inclui>>
+@enduml

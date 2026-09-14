@@ -1,0 +1,63 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Produto {
+  +id: int
+  +nome: string
+  +descricao: string
+  +categoria: string
+  +preco: decimal
+  +estoque: int
+  +ativo: bool
+}
+
+class Cliente {
+  +id: int
+  +nome: string
+  +cpf: string
+  +telefone: string
+  +email: string
+  +ativo: bool
+}
+
+class Fornecedor {
+  +id: int
+  +nome: string
+  +cnpj: string
+  +telefone: string
+  +email: string
+  +ativo: bool
+}
+
+class Filial {
+  +id: int
+  +nome: string
+  +cnpj: string
+  +cidade: string
+  +uf: string
+  +ativo: bool
+}
+
+class Pedido {
+  +id: int
+  +numero: string
+  +dataPedido: datetime
+  +status: string
+  +total: decimal
+  +criar()
+  +efetivar()
+}
+
+class ItemPedido {
+  +id: int
+  +quantidade: int
+  +precoUnitario: decimal
+  +subtotal: decimal
+}
+
+Fornecedor "1" -- "0..*" Produto : fornece
+Cliente "1" -- "0..*" Pedido : realiza
+Filial "1" -- "0..*" Pedido : recebe
+Pedido "1" *-- "1..*" ItemPedido : possui
+Produto "1" -- "0..*" ItemPedido : compõe
+@enduml
